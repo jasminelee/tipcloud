@@ -7,8 +7,10 @@ export class DJRegistry {
     if (!soundCloudUrl.includes('soundcloud.com')) {
       throw new Error('Invalid SoundCloud URL');
     }
-    if (!btcAddress.match(/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71}$/)) {
-      throw new Error('Invalid BTC address');
+    // Check if btcAddress is a valid Bitcoin address
+    const btcAddressRegex = /^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[a-z0-9]{39,59}|tb1[a-z0-9]{39,59}|bcrt1[a-z0-9]{39,59})$/;
+    if (!btcAddressRegex.test(btcAddress)) {
+      throw new Error('Invalid Bitcoin address');
     }
 
     // Store DJ info
@@ -33,5 +35,14 @@ export class DJRegistry {
       soundCloudUrl: url,
       ...info
     }));
+  }
+
+  isDJRegistered(address) {
+    for (const djInfo of djDatabase.values()) {
+      if (djInfo.btcAddress === address) {
+        return true;
+      }
+    }
+    return false;
   }
 } 

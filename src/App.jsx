@@ -8,6 +8,7 @@ import { DJRegistryPage } from './components/DJRegistry';
 import DjStats from './components/DjStats';
 import TopDjs from './components/TopDjs';
 import { recordTip, getUserTipHistory, getGlobalStats } from './services/tipPool';
+import CashOut from './components/CashOut';
 
 function TippingApp() {
   const { open } = useAppKit();
@@ -125,6 +126,7 @@ function TippingApp() {
           <button onClick={() => setView('history')}>My Tip History</button>
           <button onClick={() => setView('stats')}>Stats</button>
           <button onClick={() => setView('top-djs')}>Top DJs</button>
+          <button onClick={() => setView('cashout')}>Cash Out Tips</button>
         </nav>
       </header>
 
@@ -152,7 +154,7 @@ function TippingApp() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Tip Amount (ETH):</label>
+                    <label>Tip Amount (BTC):</label>
                     <input 
                       type="number"
                       placeholder="0.01"
@@ -194,7 +196,7 @@ function TippingApp() {
             <div className="tip-history">
               {userTips.map(tip => (
                 <div key={tip.id} className="tip-record">
-                  <p><strong>Amount:</strong> {tip.amount} ETH</p>
+                  <p><strong>Amount:</strong> {tip.amount} BTC</p>
                   <p><strong>DJ:</strong> {tip.djAddress}</p>
                   <p><strong>Track:</strong> {tip.soundcloudLink}</p>
                   <p><strong>Date:</strong> {new Date(tip.timestamp).toLocaleString()}</p>
@@ -208,7 +210,7 @@ function TippingApp() {
           <h2>Tipping Stats</h2>
           <div className="global-stats">
             <h3>Global Stats</h3>
-            <p><strong>Total Tipped:</strong> {globalStats.totalTipped || 0} ETH</p>
+            <p><strong>Total Tipped:</strong> {globalStats.totalTipped || 0} BTC</p>
             <p><strong>Total Transactions:</strong> {globalStats.transactionCount || 0}</p>
             <p><strong>Unique DJs:</strong> {globalStats.uniqueDjs || 0}</p>
             <p><strong>Unique Tippers:</strong> {globalStats.uniqueTippers || 0}</p>
@@ -218,7 +220,10 @@ function TippingApp() {
         <TopDjs onSelectDj={handleSelectDj} />
       ) : view === 'dj-stats' ? (
         <DjStats djAddress={selectedDj} />
-      ) : null}
+      ) : view == 'cashout'  ? (
+        <CashOut setView={setView} />
+      ) 
+      : null}
     </div>
   );
 }
