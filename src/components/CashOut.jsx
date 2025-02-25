@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getLocalStorage, isConnected } from '@stacks/connect';
 import { getDjBalance, getDjTransactions } from '../services/tipPool';
+import { getExplorerLink } from '../services/sbtcTransactions';
 
 function CashOut({ setView }) {
   const [balance, setBalance] = useState(0);
@@ -97,7 +98,7 @@ function CashOut({ setView }) {
       
       <div className="balance-display">
         <p>Your Current Balance:</p>
-        <p className="balance-amount">{balance} STX</p>
+        <p className="balance-amount">{balance} sBTC</p>
       </div>
       
       <form onSubmit={handleWithdraw}>
@@ -109,14 +110,14 @@ function CashOut({ setView }) {
             value={withdrawAmount}
             onChange={(e) => setWithdrawAmount(e.target.value)}
             max={balance}
-            min="0.000001"
-            step="0.000001"
+            min="0.00000001"
+            step="0.00000001"
             required
           />
         </div>
         
         <button type="submit" disabled={loading || balance <= 0}>
-          {loading ? 'Processing...' : 'Withdraw Funds'}
+          {loading ? 'Processing...' : 'Withdraw sBTC'}
         </button>
       </form>
       
@@ -142,11 +143,23 @@ function CashOut({ setView }) {
               .map(tx => (
                 <div key={tx.id} className="transaction-item">
                   <p>
-                    <strong>{tx.amount} STX</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
+                    <strong>{tx.amount} sBTC</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
                   </p>
                   <p className="transaction-date">
                     {new Date(tx.timestamp).toLocaleString()}
                   </p>
+                  {tx.id.startsWith('0x') && (
+                    <p>
+                      <a 
+                        href={getExplorerLink(tx.id)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="tx-link"
+                      >
+                        View Transaction
+                      </a>
+                    </p>
+                  )}
                 </div>
               ))}
           </div>
