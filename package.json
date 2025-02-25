@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@glittr-sdk/sdk": "^0.29.1",
     "@reown/appkit-adapter-bitcoin": "^1.6.8",
+    "dotenv": "^16.4.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
