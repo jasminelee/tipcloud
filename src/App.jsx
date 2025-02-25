@@ -9,6 +9,7 @@ import DjStats from './components/DjStats';
 import TopDjs from './components/TopDjs';
 import { recordTip, getUserTipHistory, getGlobalStats } from './services/tipPool';
 import CashOut from './components/CashOut';
+import WalletConnection from './components/WalletConnection';
 
 function TippingApp() {
   const { open } = useAppKit();
@@ -130,6 +131,8 @@ function TippingApp() {
         </nav>
       </header>
 
+      <WalletConnection />
+
       {view === 'tip' ? (
         <div className="wallet-status">
           {!isConnected ? (
@@ -138,9 +141,9 @@ function TippingApp() {
             </button>
           ) : (
             <>
-              <div className="connected-status">
+              {/* <div className="connected-status">
                 Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-              </div>
+              </div> */}
               <div className="tip-container">
                 <form onSubmit={handleSubmit}>
                   <div className="form-group">
