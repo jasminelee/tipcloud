@@ -1,19 +1,16 @@
 // src/App.jsx
 import { useState, useEffect } from 'react';
-import { useAppKit } from '@reown/appkit/react';
-import { useAccount } from 'wagmi';
-import { AppKitProvider } from './WalletProvider';
+import { getLocalStorage, isConnected } from '@stacks/connect';
 import './App.css';
 import { DJRegistryPage } from './components/DJRegistry';
 import DjStats from './components/DjStats';
 import TopDjs from './components/TopDjs';
 import { recordTip, getUserTipHistory, getGlobalStats } from './services/tipPool';
+import { sendStacksTip } from './services/stacksTransactions';
 import CashOut from './components/CashOut';
 import WalletConnection from './components/WalletConnection';
 
 function TippingApp() {
-  const { open } = useAppKit();
-  const { address, isConnected } = useAccount();
   const [soundCloudLink, setSoundCloudLink] = useState('');
   const [tipAmount, setTipAmount] = useState('');
   const [view, setView] = useState('tip');
@@ -22,30 +19,43 @@ function TippingApp() {
   const [userTips, setUserTips] = useState([]);
   const [globalStats, setGlobalStats] = useState({});
   const [selectedDj, setSelectedDj] = useState('');
+  const [userAddress, setUserAddress] = useState('');
+  const [userConnected, setUserConnected] = useState(false);
 
-  // Debug log
+  // Check wallet connection status and load user data
   useEffect(() => {
-    console.log('Connection state:', { isConnected, address });
-    
-    // Load user's tip history when connected
-    if (isConnected && address) {
-      const tipHistory = getUserTipHistory(address);
-      setUserTips(tipHistory);
+    const checkWalletConnection = () => {
+      const connected = isConnected();
+      setUserConnected(connected);
       
-      // Load global stats
-      const stats = getGlobalStats();
-      setGlobalStats(stats);
-    }
-  }, [isConnected, address]);
+      if (connected) {
+        const userData = getLocalStorage();
+        const address = userData?.addresses?.mainnet || '';
+        setUserAddress(address);
+        
+        // Load user's tip history
+        const tipHistory = getUserTipHistory(address);
+        setUserTips(tipHistory);
+        
+        // Load global stats
+        const stats = getGlobalStats();
+        setGlobalStats(stats);
+      }
+    };
+    
+    checkWalletConnection();
+    
+    // Set up an interval to periodically check connection status
+    const interval = setInterval(checkWalletConnection, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Function to look up DJ's wallet address from SoundCloud link
   const lookupDjWallet = async (soundCloudLink) => {
-    // This would be replaced with your actual lookup logic
-    // that queries your DJ registry contract or database
     try {
       // Mock implementation - replace with actual API call
-      // For now, returning a placeholder
-      return "0x1234567890123456789012345678901234567890"; // Replace with actual lookup
+      return "SP2MF04VAGYHGAZWGTEDW5VYCPDWWSY08Z1QFNDSN"; // Replace with actual lookup
     } catch (error) {
       console.error("Error looking up DJ wallet:", error);
       throw new Error("Could not find DJ wallet address");
@@ -55,7 +65,7 @@ function TippingApp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!isConnected) {
+    if (!userConnected) {
       alert("Please connect your wallet first");
       return;
     }
@@ -74,19 +84,20 @@ function TippingApp() {
         throw new Error("Please enter a valid tip amount");
       }
       
-      // In a real implementation, you would send the actual transaction here
-      // For now, we'll just simulate a successful transaction
-      
-      // Generate a mock transaction ID
-      const mockTxId = `tx-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      // Send the tip using Stacks Connect
+      const response = await sendStacksTip(
+        djAddress, 
+        amount, 
+        `Tip for ${soundCloudLink}`
+      );
       
       // Record the tip in our in-memory system
       const transaction = recordTip(
         djAddress,
-        address,
+        userAddress,
         amount,
         soundCloudLink,
-        mockTxId
+        response.txId
       );
       
       // Update user's tip history
@@ -135,15 +146,12 @@ function TippingApp() {
 
       {view === 'tip' ? (
         <div className="wallet-status">
-          {!isConnected ? (
-            <button onClick={open} className="connect-button">
-              Connect Wallet
-            </button>
+          {!userConnected ? (
+            <div className="connect-message">
+              <p>Please connect your wallet to send tips</p>
+            </div>
           ) : (
             <>
-              {/* <div className="connected-status">
-                Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-              </div> */}
               <div className="tip-container">
                 <form onSubmit={handleSubmit}>
                   <div className="form-group">
@@ -157,12 +165,12 @@ function TippingApp() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Tip Amount (BTC):</label>
+                    <label>Tip Amount (STX):</label>
                     <input 
                       type="number"
                       placeholder="0.01"
-                      min="0.00000001"
-                      step="0.00000001"
+                      min="0.000001"
+                      step="0.000001"
                       value={tipAmount}
                       onChange={(e) => setTipAmount(e.target.value)}
                       required
@@ -199,7 +207,7 @@ function TippingApp() {
             <div className="tip-history">
               {userTips.map(tip => (
                 <div key={tip.id} className="tip-record">
-                  <p><strong>Amount:</strong> {tip.amount} BTC</p>
+                  <p><strong>Amount:</strong> {tip.amount} STX</p>
                   <p><strong>DJ:</strong> {tip.djAddress}</p>
                   <p><strong>Track:</strong> {tip.soundcloudLink}</p>
                   <p><strong>Date:</strong> {new Date(tip.timestamp).toLocaleString()}</p>
@@ -213,7 +221,7 @@ function TippingApp() {
           <h2>Tipping Stats</h2>
           <div className="global-stats">
             <h3>Global Stats</h3>
-            <p><strong>Total Tipped:</strong> {globalStats.totalTipped || 0} BTC</p>
+            <p><strong>Total Tipped:</strong> {globalStats.totalTipped || 0} STX</p>
             <p><strong>Total Transactions:</strong> {globalStats.transactionCount || 0}</p>
             <p><strong>Unique DJs:</strong> {globalStats.uniqueDjs || 0}</p>
             <p><strong>Unique Tippers:</strong> {globalStats.uniqueTippers || 0}</p>
@@ -223,19 +231,16 @@ function TippingApp() {
         <TopDjs onSelectDj={handleSelectDj} />
       ) : view === 'dj-stats' ? (
         <DjStats djAddress={selectedDj} />
-      ) : view == 'cashout'  ? (
+      ) : view === 'cashout' ? (
         <CashOut setView={setView} />
-      ) 
-      : null}
+      ) : null}
     </div>
   );
 }
 
 function App() {
   return (
-    <AppKitProvider>
-      <TippingApp />
-    </AppKitProvider>
+    <TippingApp />
   );
 }
 

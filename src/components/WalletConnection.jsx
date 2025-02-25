@@ -1,24 +1,57 @@
-import { useAccount, useDisconnect } from 'wagmi';
+import React, { useState, useEffect } from 'react';
+import { connect, disconnect, isConnected, getLocalStorage } from '@stacks/connect';
 
 function WalletConnection() {
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const [connected, setConnected] = useState(false);
+  const [userData, setUserData] = useState(null);
 
-  if (!isConnected) {
-    return null; // Or render a connect button if needed
-  }
+  useEffect(() => {
+    // Check if user is already connected
+    const checkConnection = async () => {
+      const isUserConnected = isConnected();
+      setConnected(isUserConnected);
+      
+      if (isUserConnected) {
+        const storedData = getLocalStorage();
+        setUserData(storedData);
+      }
+    };
+    
+    checkConnection();
+  }, []);
+
+  const handleConnect = async () => {
+    try {
+      const response = await connect();
+      setConnected(true);
+      setUserData(response);
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    setConnected(false);
+    setUserData(null);
+  };
 
   return (
     <div className="wallet-connection">
-      <div className="wallet-address">
-        Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-      </div>
-      <button 
-        className="disconnect-button"
-        onClick={() => disconnect()}
-      >
-        Disconnect
-      </button>
+      {!connected ? (
+        <button onClick={handleConnect}>Connect Stacks Wallet</button>
+      ) : (
+        <>
+          <span className="wallet-address">
+            {userData?.addresses?.mainnet ? 
+              `${userData.addresses.mainnet.slice(0, 6)}...${userData.addresses.mainnet.slice(-4)}` : 
+              'Wallet Connected'}
+          </span>
+          <button className="disconnect-button" onClick={handleDisconnect}>
+            Disconnect
+          </button>
+        </>
+      )}
     </div>
   );
 }
