@@ -28,7 +28,7 @@ function TopDjs({ onSelectDj }) {
               <div className="dj-info">
                 <p className="dj-address">{dj.address.slice(0, 6)}...{dj.address.slice(-4)}</p>
                 <p className="dj-stats">
-                  {dj.totalReceived} BTC from {dj.uniqueTippers} tippers
+                  {dj.totalReceived} STX from {dj.uniqueTippers} tippers
                 </p>
               </div>
             </div>

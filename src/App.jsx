@@ -54,7 +54,19 @@ function TippingApp() {
   // Function to look up DJ's wallet address from SoundCloud link
   const lookupDjWallet = async (soundCloudLink) => {
     try {
-      // Mock implementation - replace with actual API call
+      // In a real app, you would query your database or smart contract
+      // For now, check localStorage for registered DJs
+      const storedDJs = localStorage.getItem('registeredDJs');
+      if (storedDJs) {
+        const djs = JSON.parse(storedDJs);
+        const matchingDJ = djs.find(dj => dj.soundcloudUrl === soundCloudLink);
+        
+        if (matchingDJ) {
+          return matchingDJ.address;
+        }
+      }
+      
+      // If no match found, return a placeholder address
       return "SP2MF04VAGYHGAZWGTEDW5VYCPDWWSY08Z1QFNDSN"; // Replace with actual lookup
     } catch (error) {
       console.error("Error looking up DJ wallet:", error);

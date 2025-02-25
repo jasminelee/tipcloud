@@ -32,7 +32,7 @@ function DjStats({ djAddress }) {
       <div className="stats-summary">
         <div className="stat-card">
           <h3>Total Received</h3>
-          <p className="stat-value">{stats.totalReceived} BTC</p>
+          <p className="stat-value">{stats.totalReceived} STX</p>
         </div>
         
         <div className="stat-card">
@@ -57,7 +57,7 @@ function DjStats({ djAddress }) {
               <div key={track} className="track-item">
                 <p className="track-link">{track}</p>
                 <p className="track-stats">
-                  {trackStats.totalReceived} BTC ({trackStats.tipCount} tips)
+                  {trackStats.totalReceived} STX ({trackStats.tipCount} tips)
                 </p>
               </div>
             ))
@@ -75,7 +75,7 @@ function DjStats({ djAddress }) {
             .map(tx => (
               <div key={tx.id} className="transaction-item">
                 <p>
-                  <strong>{tx.amount} BTC</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
+                  <strong>{tx.amount} STX</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
                 </p>
                 <p className="transaction-date">
                   {new Date(tx.timestamp).toLocaleString()}
