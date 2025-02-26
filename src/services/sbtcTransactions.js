@@ -51,18 +51,13 @@ export const sendSbtcTip = async (recipientAddress, satoshiAmount) => {
     // Create contract call transaction
     const response = await request('stx_callContract', {
       network: 'mainnet',
-      contractAddress: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4',
-      contractName: 'sbtc-token',
+      contract: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token',
       functionName: 'transfer',
       functionArgs: [
         Cl.uint(satoshiAmount),
-        Cl.standardPrincipal(recipientAddress),
         Cl.standardPrincipal(senderAddress),
-      ],
-      postConditionMode: PostConditionMode.Allow,
-      onFinish: data => {
-        console.log('Transaction finished:', data);
-      },
+        Cl.standardPrincipal(recipientAddress),
+      ]
     });
     
     return response;
