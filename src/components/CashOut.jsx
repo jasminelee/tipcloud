@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { getLocalStorage, isConnected } from '@stacks/connect';
 import { getDjBalance, getDjTransactions } from '../services/tipPool';
-import { getExplorerLink } from '../services/sbtcTransactions';
+import { getExplorerLink, sbtcToSatoshis, satoshisToSbtc, formatSatoshis } from '../services/sbtcTransactions';
 
 function CashOut({ setView }) {
-  const [balance, setBalance] = useState(0);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [balance, setBalance] = useState(0); // Balance in sBTC
+  const [withdrawAmount, setWithdrawAmount] = useState(''); // Amount in satoshis
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [userAddress, setUserAddress] = useState('');
   const [connected, setConnected] = useState(false);
+
+  // Function to convert and format sBTC to satoshis for display
+  const formatAmount = (sbtcAmount) => {
+    const satoshis = sbtcToSatoshis(sbtcAmount);
+    return formatSatoshis(satoshis);
+  };
+  
+  // Get balance in satoshis for display
+  const balanceInSatoshis = sbtcToSatoshis(balance);
 
   useEffect(() => {
     const checkConnection = () => {
@@ -43,14 +52,14 @@ function CashOut({ setView }) {
       return;
     }
     
-    const amount = parseFloat(withdrawAmount);
+    const satoshiAmount = parseInt(withdrawAmount, 10);
     
-    if (isNaN(amount) || amount <= 0) {
+    if (isNaN(satoshiAmount) || satoshiAmount <= 0) {
       alert("Please enter a valid amount");
       return;
     }
     
-    if (amount > balance) {
+    if (satoshiAmount > balanceInSatoshis) {
       alert("Withdrawal amount exceeds your balance");
       return;
     }
@@ -66,7 +75,7 @@ function CashOut({ setView }) {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Update balance (in a real app, this would happen after blockchain confirmation)
-      setBalance(prevBalance => prevBalance - amount);
+      setBalance(prevBalance => prevBalance - satoshisToSbtc(satoshiAmount));
       
       setStatus('success');
       setWithdrawAmount('');
@@ -98,26 +107,27 @@ function CashOut({ setView }) {
       
       <div className="balance-display">
         <p>Your Current Balance:</p>
-        <p className="balance-amount">{balance} sBTC</p>
+        <p className="balance-amount">{formatSatoshis(balanceInSatoshis)}</p>
       </div>
       
       <form onSubmit={handleWithdraw}>
         <div className="form-group">
-          <label>Amount to Withdraw:</label>
+          <label>Amount to Withdraw (in satoshis):</label>
           <input
             type="number"
-            placeholder="Enter amount"
+            placeholder="Enter amount in satoshis"
             value={withdrawAmount}
             onChange={(e) => setWithdrawAmount(e.target.value)}
-            max={balance}
-            min="0.00000001"
-            step="0.00000001"
+            max={balanceInSatoshis}
+            min="1000"
+            step="1000"
             required
           />
+          <small>Minimum withdrawal: 1,000 satoshis</small>
         </div>
         
         <button type="submit" disabled={loading || balance <= 0}>
-          {loading ? 'Processing...' : 'Withdraw sBTC'}
+          {loading ? 'Processing...' : 'Withdraw Satoshis'}
         </button>
       </form>
       
@@ -143,7 +153,7 @@ function CashOut({ setView }) {
               .map(tx => (
                 <div key={tx.id} className="transaction-item">
                   <p>
-                    <strong>{tx.amount} sBTC</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
+                    <strong>{formatAmount(tx.amount)}</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
                   </p>
                   <p className="transaction-date">
                     {new Date(tx.timestamp).toLocaleString()}

@@ -1,14 +1,40 @@
 import { request, getLocalStorage, isConnected } from '@stacks/connect';
-import { PostConditionMode } from '@stacks/transactions';
-import { Cl } from '@stacks/transactions';
+import { PostConditionMode, Cl } from '@stacks/transactions';
+
+/**
+ * Convert satoshis to sBTC
+ * @param {number} satoshis - Amount in satoshis
+ * @returns {number} Amount in sBTC
+ */
+export const satoshisToSbtc = (satoshis) => {
+  return satoshis / 100000000;
+};
+
+/**
+ * Convert sBTC to satoshis
+ * @param {number} sbtc - Amount in sBTC
+ * @returns {number} Amount in satoshis
+ */
+export const sbtcToSatoshis = (sbtc) => {
+  return Math.floor(sbtc * 100000000);
+};
+
+/**
+ * Format satoshis for display
+ * @param {number} satoshis - Amount in satoshis
+ * @returns {string} Formatted string (e.g., "5,000 sats")
+ */
+export const formatSatoshis = (satoshis) => {
+  return `${satoshis.toLocaleString()} sats`;
+};
 
 /**
  * Send sBTC tokens from the user to a DJ
  * @param {string} recipientAddress - The DJ's STX wallet address
- * @param {number} amount - The amount in sBTC to send
+ * @param {number} satoshiAmount - The amount in satoshis to send
  * @returns {Promise<object>} The transaction response
  */
-export const sendSbtcTip = async (recipientAddress, amount) => {
+export const sendSbtcTip = async (recipientAddress, satoshiAmount) => {
   try {
     // Get the sender's address
     const userData = getLocalStorage();
@@ -20,22 +46,18 @@ export const sendSbtcTip = async (recipientAddress, amount) => {
 
     console.log('Sending from address:', senderAddress);
     console.log('Sending to address:', recipientAddress);
-    console.log('Amount in sBTC:', amount);
-    // Convert amount to smallest unit (1 sBTC = 100,000,000 satoshis)
-    const satoshiAmount = Math.floor(amount * 100000000);
     console.log('Amount in satoshis:', satoshiAmount);
     
-    // Create contract call transaction with simplified arguments
+    // Create contract call transaction
     const response = await request('stx_callContract', {
       network: 'mainnet',
       contractAddress: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4',
       contractName: 'sbtc-token',
       functionName: 'transfer',
       functionArgs: [
-        Cl.uint(satoshiAmount), //.toString(), // The amount as a string
-        Cl.standardPrincipal(recipientAddress), // The recipient address as a string
-        Cl.standardPrincipal(senderAddress), // The sender address as a string
-        // "dj tip for kewl sounds" // No memo
+        Cl.uint(satoshiAmount),
+        Cl.standardPrincipal(recipientAddress),
+        Cl.standardPrincipal(senderAddress),
       ],
       postConditionMode: PostConditionMode.Allow,
       onFinish: data => {

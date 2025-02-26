@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDjStats, getDjTransactions } from '../services/tipPool';
-import { getExplorerLink } from '../services/sbtcTransactions';
+import { getExplorerLink, sbtcToSatoshis, formatSatoshis } from '../services/sbtcTransactions';
 
 function DjStats({ djAddress }) {
   const [stats, setStats] = useState(null);
@@ -26,6 +26,12 @@ function DjStats({ djAddress }) {
     return <p>Loading stats...</p>;
   }
   
+  // Function to convert and format sBTC to satoshis for display
+  const formatAmount = (sbtcAmount) => {
+    const satoshis = sbtcToSatoshis(sbtcAmount);
+    return formatSatoshis(satoshis);
+  };
+  
   return (
     <div className="dj-stats">
       <h2>DJ Stats: {djAddress.slice(0, 6)}...{djAddress.slice(-4)}</h2>
@@ -33,7 +39,7 @@ function DjStats({ djAddress }) {
       <div className="stats-summary">
         <div className="stat-card">
           <h3>Total Received</h3>
-          <p className="stat-value">{stats.totalReceived} sBTC</p>
+          <p className="stat-value">{formatAmount(stats.totalReceived)}</p>
         </div>
         
         <div className="stat-card">
@@ -58,7 +64,7 @@ function DjStats({ djAddress }) {
               <div key={track} className="track-item">
                 <p className="track-link">{track}</p>
                 <p className="track-stats">
-                  {trackStats.totalReceived} sBTC ({trackStats.tipCount} tips)
+                  {formatAmount(trackStats.totalReceived)} ({trackStats.tipCount} tips)
                 </p>
               </div>
             ))
@@ -76,7 +82,7 @@ function DjStats({ djAddress }) {
             .map(tx => (
               <div key={tx.id} className="transaction-item">
                 <p>
-                  <strong>{tx.amount} sBTC</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
+                  <strong>{formatAmount(tx.amount)}</strong> from {tx.userAddress.slice(0, 6)}...{tx.userAddress.slice(-4)}
                 </p>
                 <p className="transaction-date">
                   {new Date(tx.timestamp).toLocaleString()}

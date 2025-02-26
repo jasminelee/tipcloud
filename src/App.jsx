@@ -6,7 +6,7 @@ import { DJRegistryPage } from './components/DJRegistry';
 import DjStats from './components/DjStats';
 import TopDjs from './components/TopDjs';
 import { recordTip, getUserTipHistory, getGlobalStats } from './services/tipPool';
-import { sendSbtcTip, getExplorerLink } from './services/sbtcTransactions';
+import { sendSbtcTip, getExplorerLink, satoshisToSbtc } from './services/sbtcTransactions';
 import CashOut from './components/CashOut';
 import WalletConnection from './components/WalletConnection';
 
@@ -113,22 +113,22 @@ function TippingApp() {
       
       console.log("Found DJ address:", djAddress);
       
-      // Parse tip amount
-      const amount = parseFloat(tipAmount);
+      // Parse tip amount (now in satoshis)
+      const satoshiAmount = parseInt(tipAmount, 10);
       
-      if (isNaN(amount) || amount <= 0) {
+      if (isNaN(satoshiAmount) || satoshiAmount <= 0) {
         throw new Error("Please enter a valid amount");
       }
       
       // Send the tip using sBTC
-      const response = await sendSbtcTip(djAddress, amount);
+      const response = await sendSbtcTip(djAddress, satoshiAmount);
       console.log("Transaction response:", response);
       
-      // Record the transaction in our system
+      // Record the transaction in our system (store amount in sBTC for consistency)
       const transaction = recordTip(
         djAddress,
         userAddress,
-        amount,
+        satoshisToSbtc(satoshiAmount), // Convert to sBTC for storage
         soundCloudLink,
         response.txId
       );
@@ -192,17 +192,17 @@ function TippingApp() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Tip Amount (sBTC):</label>
-                  <input 
+                  <label>Tip Amount (in satoshis):</label>
+                  <input
                     type="number"
-                    placeholder="0.0001"
-                    min="0.00000001"
-                    step="0.00000001"
+                    placeholder="Enter amount in satoshis"
                     value={tipAmount}
                     onChange={(e) => setTipAmount(e.target.value)}
+                    min="1000"
+                    step="1000"
                     required
                   />
-                  <small>Send sBTC tokens to the DJ</small>
+                  <small>Minimum tip: 1,000 satoshis (0.00001 sBTC)</small>
                 </div>
                 <button type="submit" disabled={loading}>
                   {loading ? 'Processing...' : 'Send Tip'}

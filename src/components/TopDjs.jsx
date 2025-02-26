@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { getTopDjs } from '../services/tipPool';
+import { sbtcToSatoshis, formatSatoshis } from '../services/sbtcTransactions';
 
 function TopDjs({ onSelectDj }) {
   const [topDjs, setTopDjs] = useState([]);
+  
+  // Function to convert and format sBTC to satoshis for display
+  const formatAmount = (sbtcAmount) => {
+    const satoshis = sbtcToSatoshis(sbtcAmount);
+    return formatSatoshis(satoshis);
+  };
   
   useEffect(() => {
     // Load top DJs
@@ -28,7 +35,7 @@ function TopDjs({ onSelectDj }) {
               <div className="dj-info">
                 <p className="dj-address">{dj.address.slice(0, 6)}...{dj.address.slice(-4)}</p>
                 <p className="dj-stats">
-                  {dj.totalReceived} sBTC from {dj.uniqueTippers} tippers
+                  {formatAmount(dj.totalReceived)} from {dj.uniqueTippers} tippers
                 </p>
               </div>
             </div>
